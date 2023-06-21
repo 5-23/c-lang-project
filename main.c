@@ -6,30 +6,37 @@
 #define SIZE 4
 #define GOAL 2048
 
-int map[SIZE][SIZE];
-int score;
-bool win;
 
-void init() {
+typedef struct {
+    int map[SIZE][SIZE];
+    int score;
+    bool win;
+    bool lose;
+} Game;
+
+// int score;
+// int map[SIZE][SIZE];
+
+void init(Game *game) {
     
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            map[i][j] = 0;
+            game->map[i][j] = 0;
         }
     }
 
-    add_new_tile();
-    add_new_tile();
+    spawn(game);
+    spawn(game);
 }
 
-void add_new_tile() {
+void spawn(Game *game) {
     int new_tile = (rand() % 100 < 89) ? 2 : 4;
     int empty_cells[SIZE * SIZE][2];
     int count = 0;
 
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            if (map[i][j] == 0) {
+            if (game->map[i][j] == 0) {
                 empty_cells[count][0] = i;
                 empty_cells[count][1] = j;
                 count++;
@@ -41,160 +48,160 @@ void add_new_tile() {
         int rnd = rand() % count;
         int row = empty_cells[rnd][0];
         int col = empty_cells[rnd][1];
-        map[row][col] = new_tile;
+        game->map[row][col] = new_tile;
     }
 }
 
-void encode_map() {
-    
+void encode_map(Game game) {
+    printf("score: %d\n", game.score);
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            if (map[i][j] == 0) {
+            if (game.map[i][j] == 0) {
                 printf("  ");
             } else {
-                printf("%d ", map[i][j]);
+                printf("%d ", game.map[i][j]);
             }
         }
         printf("\n");
     }
 }
 
-void merge_tiles_left() {
+void merge(Game *game) {
     for (int i = 0; i < SIZE; i++) {
         int row[SIZE];
         int merged[SIZE];
-        int merge_count = 0;
+        int merge_cnt = 0;
 
         for (int j = 0; j < SIZE; j++) {
-            row[j] = map[i][j];
+            row[j] = game->map[i][j];
             merged[j] = 0;
         }
 
         for (int j = 0; j < SIZE; j++) {
             if (row[j] != 0) {
-                if (merge_count > 0 && row[j] == merged[merge_count - 1]) {
-                    merged[merge_count - 1] *= 2;
-                    score += merged[merge_count - 1];
+                if (merge_cnt > 0 && row[j] == merged[merge_cnt - 1]) {
+                    merged[merge_cnt - 1] *= 2;
+                    game->score += merged[merge_cnt - 1];
                     row[j] = 0;
                 } else {
-                    merged[merge_count] = row[j];
-                    merge_count++;
+                    merged[merge_cnt] = row[j];
+                    merge_cnt++;
                 }
             }
         }
 
         
         for (int j = 0; j < SIZE; j++) {
-            map[i][j] = merged[j];
+            game->map[i][j] = merged[j];
         }
     }
 }
 
-void move_left() {
+void move_left(Game *game) {
     
-    merge_tiles_left();
+    merge(game);
 
-    add_new_tile();
+    spawn(game);
 }
 
-void move_right() {
+void move_right(Game *game) {
     
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE / 2; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[i][SIZE - 1 - j];
-            map[i][SIZE - 1 - j] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[i][SIZE - 1 - j];
+            game->map[i][SIZE - 1 - j] = temp;
         }
     }
 
     
-    merge_tiles_left();
+    merge(game);
 
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE / 2; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[i][SIZE - 1 - j];
-            map[i][SIZE - 1 - j] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[i][SIZE - 1 - j];
+            game->map[i][SIZE - 1 - j] = temp;
         }
     }
 
-    add_new_tile();
+    spawn(game);
 }
 
-void move_up() {
+void move_up(Game *game) {
     
     for (int i = 0; i < SIZE; i++) {
         for (int j = i; j < SIZE; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[j][i];
-            map[j][i] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[j][i];
+            game->map[j][i] = temp;
         }
     }
 
     
-    merge_tiles_left();
+    merge(game);
 
     for (int i = 0; i < SIZE; i++) {
         for (int j = i; j < SIZE; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[j][i];
-            map[j][i] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[j][i];
+            game->map[j][i] = temp;
         }
     }
 
-    add_new_tile();
+    spawn(game);
 }
 
-void move_down() {
+void move_down(Game *game) {
     
     for (int i = 0; i < SIZE; i++) {
         for (int j = i; j < SIZE; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[j][i];
-            map[j][i] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[j][i];
+            game->map[j][i] = temp;
         }
     }
 
     
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE / 2; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[i][SIZE - 1 - j];
-            map[i][SIZE - 1 - j] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[i][SIZE - 1 - j];
+            game->map[i][SIZE - 1 - j] = temp;
         }
     }
 
     
-    merge_tiles_left();
+    merge(game);
 
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE / 2; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[i][SIZE - 1 - j];
-            map[i][SIZE - 1 - j] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[i][SIZE - 1 - j];
+            game->map[i][SIZE - 1 - j] = temp;
         }
     }
 
     for (int i = 0; i < SIZE; i++) {
         for (int j = i; j < SIZE; j++) {
-            int temp = map[i][j];
-            map[i][j] = map[j][i];
-            map[j][i] = temp;
+            int temp = game->map[i][j];
+            game->map[i][j] = game->map[j][i];
+            game->map[j][i] = temp;
         }
     }
 
-    add_new_tile();
+    spawn(game);
 }
 
-bool game_over() {
-    if (win) {
+bool game_over(Game *game) {
+    if (game->win) {
         return true;
     }
 
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            if (map[i][j] == GOAL) {
-                win = true;
+            if (game->map[i][j] == GOAL) {
+                game->win = true;
                 return true;
             }
         }
@@ -203,22 +210,39 @@ bool game_over() {
     return false;
 }
 
+void clone(Game a, Game *b){
+    memcpy(b->map, a.map, sizeof(a.map));
+    b->score, a.score;
+    b->win = a.win;
+    b->lose = a.lose;
+}
+
+int eq(int arr1[SIZE][SIZE], int arr2[SIZE][SIZE]) {
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            if (arr1[i][j] != arr2[i][j]) return 0;
+        }
+    }
+    
+    return 1;
+}
+
 int main_game() {
     srand(time(NULL));
 
-    
-    init();
+    Game game, game_clone1, game_clone2, game_clone3, game_clone4;
+    init(&game);
 
     while (true) {
         system("clear");
-        encode_map();
+        encode_map(game);
 
         char action;
         printf("Enter your action (w/a/s/d): ");
         scanf(" %c", &action);
 
-        if (game_over()) {
-            if (win) {
+        if (game_over(&game)) {
+            if (game.win) {
                 printf("You won!\n");
             } else {
                 printf("Game over!\n");
@@ -228,13 +252,32 @@ int main_game() {
 
         
         if (action == 'w') {
-            move_up();
+            move_up(&game);
         } else if (action == 'a') {
-            move_left();
+            move_left(&game);
         } else if (action == 's') {
-            move_down();
+            move_down(&game);
         } else if (action == 'd') {
-            move_right();
+            move_right(&game);
+        }
+        clone(game, &game_clone1);
+        clone(game, &game_clone2);
+        clone(game, &game_clone3);
+        clone(game, &game_clone4);
+        move_left  (&game_clone1);
+        move_right (&game_clone2);
+        move_up    (&game_clone3);
+        move_down  (&game_clone4);
+        if (
+            eq(game_clone1.map, game.map) &&
+            eq(game_clone2.map, game.map) &&
+            eq(game_clone3.map, game.map) &&
+            eq(game_clone4.map, game.map)
+            ){
+                printf("GAME OVER");
+                encode_map(game);
+                return;
+
         }
     }
 }
