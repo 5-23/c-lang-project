@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <curses.h>
 #include <time.h>
+#include <stdlib.h>
 
 #define SIZE 4
 #define GOAL 2048
@@ -268,6 +269,9 @@ int main_game() {
         move_right (&game_clone2);
         move_up    (&game_clone3);
         move_down  (&game_clone4);
+        
+        write_f(game.score);
+
         if (
             eq(game_clone1.map, game.map) &&
             eq(game_clone2.map, game.map) &&
@@ -276,12 +280,52 @@ int main_game() {
             ){
                 printf("GAME OVER");
                 encode_map(game);
-                return;
+                return 0;
 
         }
     }
 }
 
+void intro(){
+    int score = get_f();
+    if (!score){
+        printf("최고 기록: 없음");
+    }else{
+        printf("최고 기록: %d", score);
+    }
+    printf("\nenter를 눌러서 시작하세요!");
+    getchar();
+}
+
+void write_f(int n){
+    if (get_f() < n){
+        char str_n[20];
+        sprintf(str_n, "%d", n);
+
+        FILE* fp = fopen("score.txt","w");
+        fputs(str_n, fp);
+
+        fclose(fp);
+    }
+}
+
+int get_f(){
+    FILE* fs;
+    fs = fopen("score.txt", "r");
+    char str[10];
+    fgets(str, 100, fs);
+    return atoi(str);
+}
+
 int main(){
-	main_game();
+    while (1)
+    {    
+        intro();
+
+        main_game();
+        
+        printf("\n끝내기: ctrl+c, 다시하기: enter");
+        getchar();
+        
+    }
 }
